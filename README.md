@@ -1,2 +1,2 @@
-# PHPTerminal-modules-firewall
-Firewall modules for PHPTerminal to manage PHPFirewall library
+# PHPTerminal-plugins-auth
+PHPTerminal-modules-firewall is an firewall module for PHPTerminal to manage PHPFirewall library

@@ -1,0 +1,37 @@
+{
+    "name": "phpterminal/phpterminal-modules-firewall",
+    "description": "PHPTerminal-modules-firewall is an firewall module for PHPTerminal to manage PHPFirewall library",
+    "keywords": [
+        "php",
+        "terminal"
+    ],
+    "authors": [
+        {
+            "name": "Oyeaussie",
+            "email": "email@oyeaussie.com",
+            "homepage": "https://github.com/phpterminal/PHPTerminal-modules-firewall"
+        }
+    ],
+    "funding": [
+        {
+            "url": "https://github.com/sponsors/oyeaussie",
+            "type": "github"
+        },
+        {
+            "url": "https://buymeacoffee.com/oyeaussie",
+            "type": "other"
+        }
+    ],
+    "require": {
+        "php": "^7.2.5 || ^8.0",
+        "ext-json": "*",
+        "phpterminal/phpterminal": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPTerminalModulesFirewall\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "license": "MIT"
+}
