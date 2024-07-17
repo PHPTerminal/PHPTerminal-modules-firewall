@@ -1,6 +1,6 @@
 {
     "name": "phpterminal/phpterminal-modules-firewall",
-    "description": "PHPTerminal-modules-firewall is an firewall module for PHPTerminal to manage PHPFirewall library",
+    "description": "PHPTerminal-modules-firewall is an firewall module for PHPTerminal to manage PHPFirewall library.",
     "keywords": [
         "php",
         "terminal"
