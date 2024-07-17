@@ -1,6 +1,6 @@
 <?php
 
-namespace PHPTerminal\FirewallModules;
+namespace PHPTerminalModulesFirewall;
 
 use PHPTerminal\Modules;
 use PHPTerminal\Terminal;
