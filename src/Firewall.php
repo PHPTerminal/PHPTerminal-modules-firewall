@@ -27,9 +27,11 @@ class Firewall extends Modules
         return true;
     }
 
-    public function onInstall()
+    public function onInstall() : object
     {
         $this->terminal->config['modules']['firewall']['banner'] = 'PHPTerminal-modules-firewall is an firewall module for PHPTerminal to manage PHPFirewall library.';
+
+        return $this;
     }
 
     public function getCommands() : array
