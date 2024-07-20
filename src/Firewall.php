@@ -53,9 +53,27 @@ class Firewall extends Modules
                     "function"      => "show"
                 ],
                 [
+                    "availableAt"   => "enable",
+                    "command"       => "show filter",
+                    "description"   => "show filter {address}",
+                    "function"      => "show"
+                ],
+                [
                     "availableAt"   => "config",
                     "command"       => "filter add",
                     "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|region/{country|state|city}}. filter_type options: allow, block, monitor. address_type options: host, network, region.",
+                    "function"      => "filter"
+                ],
+                [
+                    "availableAt"   => "config",
+                    "command"       => "filter update",
+                    "description"   => "filter update {filter_id} {filter_type}. Update filter type. filter_type options: allow, block, monitor.",
+                    "function"      => "filter"
+                ],
+                [
+                    "availableAt"   => "config",
+                    "command"       => "filter remove",
+                    "description"   => "filter remove {filter_id}. Remove a filter",
                     "function"      => "filter"
                 ]
             ];
@@ -126,6 +144,37 @@ class Firewall extends Modules
         return false;
     }
 
+    protected function showFilter($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        //Address
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please enter correct address', 1);
+
+            return false;
+        }
+
+        $filter = $this->firewallPackage->getFilterByAddress($args[0], true);
+
+        if ($filter) {
+            $this->terminal->addResponse('Filter added successfully', 0, ['filter' => $filter]);
+
+            return true;
+        }
+
+        $response = $this->firewallPackage->response->getAllData();
+        if (isset($response['response']['responseCode']) && isset($response['response']['responseMessage'])) {
+            $this->terminal->addResponse($response['response']['responseMessage'], $response['response']['responseCode']);
+        }
+
+        return true;
+    }
+
     protected function filterAdd($args)
     {
         if (!$this->firewallConfig) {
@@ -176,6 +225,81 @@ class Firewall extends Modules
         }
 
         return true;
+    }
+
+    protected function filterUpdate($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        if (!isset($args[0]) || !isset($args[1])) {
+            $this->terminal->addResponse('Please provide filter ID and filter type', 1);
+
+            return false;
+        }
+
+        //Filter Type
+        if ($args[1] !== 'allow' && $args[1] !== 'block' && $args[1] !== 'monitor') {
+            $this->terminal->addResponse('Please enter correct filter type. allow/block/monitor are available filter type options. Don\'t know what ' . $args[1] . ' is...', 1);
+
+            return false;
+        }
+
+        $filterData['id'] = $args[0];
+        $filterData['filter_type'] = $args[1];
+        $filterData['updated_by'] = $this->terminal->getAccount()['id'] ?? 0;
+        $filterData['updated_at'] = time();
+
+        $updateFilter = $this->firewallPackage->updateFilter($filterData);
+
+        if ($updateFilter) {
+            $this->terminal->addResponse('Filter updated successfully', 0);
+
+            return true;
+        }
+
+        $response = $this->firewallPackage->response->getAllData();
+        if (isset($response['response']['responseCode']) && isset($response['response']['responseMessage'])) {
+            $this->terminal->addResponse($response['response']['responseMessage'], $response['response']['responseCode']);
+        }
+
+        return true;
+    }
+
+    protected function filterRemove($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please provide filter ID', 1);
+
+            return false;
+        }
+
+        $filterData['id'] = $args[0];
+
+        $updateFilter = $this->firewallPackage->removeFilter($filterData);
+
+        if ($updateFilter) {
+            $this->terminal->addResponse('Filter removed successfully', 0);
+
+            return true;
+        }
+
+        $response = $this->firewallPackage->response->getAllData();
+        if (isset($response['response']['responseCode']) && isset($response['response']['responseMessage'])) {
+            $this->terminal->addResponse($response['response']['responseMessage'], $response['response']['responseCode']);
+        }
+
+        return true;
+
     }
 
     public function onInstall() : object
