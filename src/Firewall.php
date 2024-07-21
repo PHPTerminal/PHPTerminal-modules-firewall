@@ -54,7 +54,7 @@ class Firewall extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "show firewall",
-                    "description"   => "Show firewall modules.",
+                    "description"   => "Show firewall module configuration",
                     "function"      => "show"
                 ],
                 [
@@ -130,7 +130,13 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "firewall set ip2location key",
-                "description"   => "firewall set ip2location key {key}. Set key as null to remove the key",
+                "description"   => "firewall set ip2location key. Set key as null to remove the key",
+                "function"      => "firewall"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "firewall set ip2location io key",
+                "description"   => "firewall set ip2location io key. Set key as null to remove the key",
                 "function"      => "firewall"
             ]
         );
@@ -152,7 +158,7 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "filter add",
-                "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|region/{country|state|city}}. filter_type options: allow, block, monitor. address_type options: host, network, region.",
+                "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|ip2location/{country|region|city}}. filter_type options: allow, block, monitor. address_type options: host, network, ip2location.",
                 "function"      => "filter"
             ],
             [
@@ -218,13 +224,13 @@ class Firewall extends Modules
                 $this->terminal->addResponse(
                     '',
                     0,
-                    ['Firewall Details' => $filters['response']['responseData']['filters']],
+                    ['Filters' => $filters['response']['responseData']['filters']],
                     true,
                     [
-                        '_id', 'filter_type', 'address_type', 'address', 'hit_count', 'updated_by', 'updated_at'
+                        '_id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at'
                     ],
                     [
-                        5,15,15,50,15,25,25
+                        5,15,15,50,10,10,25,25
                     ]
                 );
             } else  {
@@ -257,7 +263,34 @@ class Firewall extends Modules
         $filter = $this->firewallPackage->getFilterByAddress($args[0], true);
 
         if ($filter) {
-            $this->terminal->addResponse('Filter added successfully', 0, ['filter' => $filter]);
+            if (isset($filter['ips']) && $filter['ips'] > 0) {
+                $ips = $filter['ips'];
+                unset($filter['ips']);
+
+                array_walk($ips, function(&$ip) use($filter) {
+                    $ip['address (parent)'] = $ip['address'] . ' (' . $filter['address'] . ')';
+                });
+                $filter['address (parent)'] = $filter['address'];
+                $filter = [$filter];
+                $filter = array_merge($filter, $ips);
+                $addressHeader = 'address (parent)';
+            } else {
+                $filter = [$filter];
+                $addressHeader = 'address';
+            }
+
+            $this->terminal->addResponse(
+                '',
+                0,
+                ['Filter' => $filter],
+                true,
+                [
+                    '_id', 'filter_type', 'address_type', $addressHeader, 'hit_count', 'updated_by', 'updated_at'
+                ],
+                [
+                    5,15,15,50,10,25,25
+                ]
+            );
 
             return true;
         }
@@ -422,13 +455,32 @@ class Firewall extends Modules
             return false;
         }
 
-        if (!isset($args[0])) {
-            $this->terminal->addResponse('Please provide correct key', 1);
+        $key = $this->terminal->inputToArray(['enter key']);
+
+        $firewallConfig = $this->firewallPackage->setConfigIp2locationKey($key['enter key']);
+
+        if ($firewallConfig) {
+            $this->showFirewall();
+
+            return true;
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function firewallSetIp2locationIoKey($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
 
             return false;
         }
 
-        $firewallConfig = $this->firewallPackage->setConfigIp2locationKey($args[0]);
+        $key = $this->terminal->inputToArray(['enter key']);
+
+        $firewallConfig = $this->firewallPackage->setConfigIp2locationIoKey($key['enter key']);
 
         if ($firewallConfig) {
             $this->showFirewall();
@@ -513,15 +565,15 @@ class Firewall extends Modules
             return false;
         }
 
-        if ($args[1] !== 'host' && $args[1] !== 'network' && $args[1] !== 'region') {
-            $this->terminal->addResponse('Please enter correct address type. host/network/region are available address type options. Don\'t know what ' . $args[1] . ' is...', 1);
+        if ($args[1] !== 'host' && $args[1] !== 'network' && $args[1] !== 'ip2location') {
+            $this->terminal->addResponse('Please enter correct address type. host/network/ip2location are available address type options. Don\'t know what ' . $args[1] . ' is...', 1);
 
             return false;
         }
 
-        //Address/region
+        //Address/ip2location
         if (!isset($args[2])) {
-            $this->terminal->addResponse('Please enter correct address/region', 1);
+            $this->terminal->addResponse('Please enter correct address|ip2location/{country|region|city}', 1);
 
             return false;
         }
