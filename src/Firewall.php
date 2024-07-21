@@ -47,6 +47,12 @@ class Firewall extends Modules
             [
                 [
                     "availableAt"   => "enable",
+                    "command"       => "",
+                    "description"   => "show commands",
+                    "function"      => ""
+                ],
+                [
+                    "availableAt"   => "enable",
                     "command"       => "show firewall",
                     "description"   => "Show firewall modules.",
                     "function"      => "show"
@@ -62,7 +68,19 @@ class Firewall extends Modules
                     "command"       => "show filter",
                     "description"   => "show filter {address}",
                     "function"      => "show"
-                ]
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "",
+                    "description"   => "",
+                    "function"      => ""
+                ],
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "firewall check ip",
+                    "description"   => "firewall check ip {address}. Check state of an ip address, if it is being blocked/allowed/monitored by the firewall.",
+                    "function"      => "firewall"
+                ],
             ];
 
         //Set Commands
@@ -70,7 +88,7 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "",
-                "description"   => "set commands",
+                "description"   => "firewall set commands",
                 "function"      => ""
             ],
             [
@@ -95,6 +113,12 @@ class Firewall extends Modules
                 "availableAt"   => "config",
                 "command"       => "firewall set default filter",
                 "description"   => "firewall set default filter {state}. Status options: allow/block.",
+                "function"      => "firewall"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "firewall reset default filter hit count",
+                "description"   => "firewall reset default filter hit count. Resets default filter hit counts to 0.",
                 "function"      => "firewall"
             ],
             [
@@ -417,6 +441,50 @@ class Firewall extends Modules
         return true;
     }
 
+    protected function firewallResetDefaultFilterHitCount()
+    {
+        $resetConfirmationArr = $this->terminal->inputToArray(['confirm reset'], ['confirm reset' => 'yes/no']);
+
+        if (strtolower($resetConfirmationArr['confirm reset']) === 'yes') {
+            $firewallConfig = $this->firewallPackage->resetConfigDefaultFilterHitCount();
+
+            if ($firewallConfig) {
+                $this->showFirewall();
+
+                return true;
+            }
+        } else if (strtolower($resetConfirmationArr['confirm reset']) === 'no') {
+            return true;
+        } else {
+            $this->terminal->addResponse('Unknown option entered : ' . $resetConfirmationArr['confirm reset'], 1);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function firewallCheckIp($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please provide correct ip address', 1);
+
+            return false;
+        }
+
+        $filter = $this->firewallPackage->checkIp($args[0]);
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
     protected function filterAdd($args)
     {
         if (!$this->firewallConfig) {
@@ -426,6 +494,12 @@ class Firewall extends Modules
         }
 
         //Filter Type
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please enter correct filter type', 1);
+
+            return false;
+        }
+
         if ($args[0] !== 'allow' && $args[0] !== 'block' && $args[0] !== 'monitor') {
             $this->terminal->addResponse('Please enter correct filter type. allow/block/monitor are available filter type options. Don\'t know what ' . $args[0] . ' is...', 1);
 
@@ -433,6 +507,12 @@ class Firewall extends Modules
         }
 
         //Address Type
+        if (!isset($args[1])) {
+            $this->terminal->addResponse('Please enter correct address type', 1);
+
+            return false;
+        }
+
         if ($args[1] !== 'host' && $args[1] !== 'network' && $args[1] !== 'region') {
             $this->terminal->addResponse('Please enter correct address type. host/network/region are available address type options. Don\'t know what ' . $args[1] . ' is...', 1);
 
@@ -547,7 +627,11 @@ class Firewall extends Modules
         $response = $this->firewallPackage->response->getAllData();
 
         if (isset($response['response']['responseCode']) && isset($response['response']['responseMessage'])) {
-            $this->terminal->addResponse($response['response']['responseMessage'], $response['response']['responseCode']);
+            $this->terminal->addResponse(
+                $response['response']['responseMessage'],
+                $response['response']['responseCode'],
+                $response['response']['responseData'] ?? []
+            );
         }
     }
 }
