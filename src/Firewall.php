@@ -158,7 +158,7 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "filter add",
-                "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|ip2location/{country|region|city}}. filter_type options: allow, block, monitor. address_type options: host, network, ip2location.",
+                "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|country_iso2_code:region:city}. filter_type options: allow, block, monitor. address_type options: host, network, ip2location.",
                 "function"      => "filter"
             ],
             [
