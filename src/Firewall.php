@@ -66,7 +66,7 @@ class Firewall extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "show filter",
-                    "description"   => "show filter {address}",
+                    "description"   => "show filter {id}",
                     "function"      => "show"
                 ],
                 [
@@ -82,6 +82,18 @@ class Firewall extends Modules
                     "function"      => "firewall"
                 ],
             ];
+
+        if ($this->firewallConfig && isset($this->firewallConfig['ip2location_io_api_key']) && $this->firewallConfig['ip2location_io_api_key'] !== '') {
+            //grab ip details from ip2location.io api
+            array_push($commands,
+                [
+                    "availableAt"   => "enable",
+                    "command"       => "firewall show ip details",
+                    "description"   => "firewall show ip details {address}. Get ip details from ip2location io API.",
+                    "function"      => "firewall"
+                ],
+            );
+        }
 
         //Set Commands
         array_push($commands,
@@ -278,20 +290,30 @@ class Firewall extends Modules
 
         //Address
         if (!isset($args[0])) {
-            $this->terminal->addResponse('Please enter correct address', 1);
+            $this->terminal->addResponse('Please enter correct id', 1);
+
+            return false;
+        }
+
+        if ((int) $args[0] === 0) {
+            $this->terminal->addResponse('Please enter correct id', 1);
 
             return false;
         }
 
         $getDefault = false;
 
-        if (isset($args[0]) && $args[0] === 'default') {
+        if (isset($args[1]) && $args[1] === 'default') {
             $getDefault = true;
         }
 
-        $filter = $this->firewallPackage->getFilterByAddress($args[0], true, $getDefault);
+        $filter = $this->firewallPackage->getFilterById($args[0], true, $getDefault);
 
         if ($filter) {
+            if ($getDefault && $filter['updated_by'] === '000') {
+                $filter['updated_by'] = "DEFAULT RULE";
+            }
+
             if (isset($filter['ips']) && $filter['ips'] > 0) {
                 $ips = $filter['ips'];
                 unset($filter['ips']);
@@ -566,6 +588,27 @@ class Firewall extends Modules
         return true;
     }
 
+    protected function firewallShowIpDetails($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please provide correct ip address', 1);
+
+            return false;
+        }
+
+        $filter = $this->firewallPackage->getIpDetailsFromIp2locationAPI($args[0]);
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
     protected function filterAdd($args)
     {
         if (!$this->firewallConfig) {
@@ -602,9 +645,17 @@ class Firewall extends Modules
 
         //Address/ip2location
         if (!isset($args[2])) {
-            $this->terminal->addResponse('Please enter correct address|ip2location/{country|region|city}', 1);
+            $this->terminal->addResponse('Please enter correct address|ip2location/{country:region:city}', 1);
 
             return false;
+        }
+
+        if (str_contains($args[2], ':')) {
+            $argsArr = $args;
+
+            $argsArr = array_splice($argsArr, 2);
+
+            $args[2] = join(' ', $argsArr);
         }
 
         $filterData['filter_type'] = $args[0];
