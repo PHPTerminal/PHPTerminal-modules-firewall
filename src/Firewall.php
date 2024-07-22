@@ -193,9 +193,15 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function showFilters()
+    protected function showFilters($args = [])
     {
-        $filters = $this->firewallPackage->getFilters();
+        $getDefault = false;
+
+        if (isset($args[0]) && $args[0] === 'default') {
+            $getDefault = true;
+        }
+
+        $filters = $this->firewallPackage->getFilters($getDefault);
 
         if ($filters === true) {
             $filters = $this->firewallPackage->response->getAllData();
@@ -208,7 +214,9 @@ class Firewall extends Modules
                 }
 
                 array_walk($filters['response']['responseData']['filters'], function(&$filter) {
-                    if (isset($filter['updated_by']) && $filter['updated_by'] != 0) {
+                    if (isset($filter['updated_by']) && $filter['updated_by'] === "000") {
+                        $filter['updated_by'] = 'DEFAULT RULE';
+                    } else if (isset($filter['updated_by']) && $filter['updated_by'] != 0) {
                         $account = $this->auth->getAccountById($filter['updated_by']);
 
                         if (isset($account['profile']['full_name']) || isset($account['profile']['email'])) {
@@ -221,17 +229,32 @@ class Firewall extends Modules
                     }
                 });
 
+                $headers =
+                    [
+                        '_id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at'
+                    ];
+                $columns =
+                    [
+                        5,15,15,50,10,10,25,25
+                    ];
+                if ($getDefault) {
+                    $headers =
+                        [
+                            '_id', 'filter_type', 'address_type', 'address', 'hit_count', 'updated_by', 'updated_at'
+                        ];
+                    $columns =
+                        [
+                            5,15,15,50,10,25,25
+                        ];
+                }
+
                 $this->terminal->addResponse(
                     '',
                     0,
                     ['Filters' => $filters['response']['responseData']['filters']],
                     true,
-                    [
-                        '_id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at'
-                    ],
-                    [
-                        5,15,15,50,10,10,25,25
-                    ]
+                    $headers,
+                    $columns
                 );
             } else  {
                 $this->terminal->addResponse('Firewall has no filters!', 2);
@@ -260,7 +283,13 @@ class Firewall extends Modules
             return false;
         }
 
-        $filter = $this->firewallPackage->getFilterByAddress($args[0], true);
+        $getDefault = false;
+
+        if (isset($args[0]) && $args[0] === 'default') {
+            $getDefault = true;
+        }
+
+        $filter = $this->firewallPackage->getFilterByAddress($args[0], true, $getDefault);
 
         if ($filter) {
             if (isset($filter['ips']) && $filter['ips'] > 0) {
@@ -651,11 +680,15 @@ class Firewall extends Modules
             return false;
         }
 
-        $filterData['id'] = $args[0];
+        $fromDefault = false;
 
-        $updateFilter = $this->firewallPackage->removeFilter($filterData);
+        if (isset($args[1]) && $args[1] === 'default') {
+            $fromDefault = true;
+        }
 
-        if ($updateFilter) {
+        $removeFilter = $this->firewallPackage->removeFilter($args[0], $fromDefault);
+
+        if ($removeFilter) {
             $this->terminal->addResponse('Filter removed successfully', 0);
 
             return true;
