@@ -243,7 +243,7 @@ class Firewall extends Modules
 
                 $headers =
                     [
-                        '_id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at'
+                        'id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at'
                     ];
                 $columns =
                     [
@@ -252,7 +252,7 @@ class Firewall extends Modules
                 if ($getDefault) {
                     $headers =
                         [
-                            '_id', 'filter_type', 'address_type', 'address', 'hit_count', 'updated_by', 'updated_at'
+                            'id', 'filter_type', 'address_type', 'address', 'hit_count', 'updated_by', 'updated_at'
                         ];
                     $columns =
                         [
@@ -336,7 +336,7 @@ class Firewall extends Modules
                 ['Filter' => $filter],
                 true,
                 [
-                    '_id', 'filter_type', 'address_type', $addressHeader, 'hit_count', 'updated_by', 'updated_at'
+                    'id', 'filter_type', 'address_type', $addressHeader, 'hit_count', 'updated_by', 'updated_at'
                 ],
                 [
                     5,15,15,50,10,25,25
