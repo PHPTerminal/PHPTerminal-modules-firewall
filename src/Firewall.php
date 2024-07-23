@@ -147,6 +147,18 @@ class Firewall extends Modules
             ],
             [
                 "availableAt"   => "config",
+                "command"       => "firewall set ip2location bin file code",
+                "description"   => "firewall set ip2location bin file code.",
+                "function"      => "firewall"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "firewall set ip2location bin access mode",
+                "description"   => "firewall set ip2location bin access mode.",
+                "function"      => "firewall"
+            ],
+            [
+                "availableAt"   => "config",
                 "command"       => "firewall set ip2location io key",
                 "description"   => "firewall set ip2location io key. Set key as null to remove the key",
                 "function"      => "firewall"
@@ -521,6 +533,84 @@ class Firewall extends Modules
         return true;
     }
 
+    protected function firewallSetIp2locationBinFileCode($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        $binFileCode = $this->terminal->inputToArray(
+            ['bin file code'],
+            [
+                'bin file code' =>
+                    [
+                        'DB1BIN','DB2BIN','DB3BIN','DB4BIN','DB5BIN','DB6BIN','DB7BIN','DB8BIN','DB9BIN','DB10BIN','DB11BIN','DB12BIN','DB13BIN','DB14BIN','DB15BIN','DB16BIN','DB17BIN','DB18BIN','DB19BIN','DB20BIN','DB21BIN','DB22BIN','DB23BIN','DB24BIN','DB25BIN','DB26BIN','DB1BINIPV6','DB2BINIPV6','DB3BINIPV6','DB4BINIPV6','DB5BINIPV6','DB6BINIPV6','DB7BINIPV6','DB8BINIPV6','DB9BINIPV6','DB10BINIPV6','DB11BINIPV6','DB12BINIPV6','DB13BINIPV6','DB14BINIPV6','DB15BINIPV6','DB16BINIPV6','DB17BINIPV6','DB18BINIPV6','DB19BINIPV6','DB20BINIPV6','DB21BINIPV6','DB22BINIPV6','DB23BINIPV6','DB24BINIPV6','DB25BINIPV6','DB26BINIPV6','DB1LITEBIN','DB3LITEBIN','DB5LITEBIN','DB9LITEBIN','DB11LITEBIN','DB1LITEBINIPV6','DB3LITEBINIPV6','DB5LITEBINIPV6','DB9LITEBINIPV6','DB11LITEBINIPV6'
+                    ]
+            ],
+            [],
+            [
+                'bin file code' => $this->firewallConfig['ip2location_bin_file_code']
+            ]
+        );
+
+        if (!$binFileCode) {
+            return true;
+        }
+
+        $firewallConfig = $this->firewallPackage->setIp2locationBinFileCode($binFileCode['bin file code']);
+
+        if ($firewallConfig) {
+            $this->showFirewall();
+
+            return true;
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function firewallSetIp2locationBinAccessMode($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        $binAccessMode = $this->terminal->inputToArray(
+            ['bin access mode'],
+            [
+                'bin access mode' =>
+                    [
+                        'SHARED_MEMORY', 'MEMORY_CACHE', 'FILE_IO'
+                    ]
+            ],
+            [],
+            [
+                'bin access mode' => $this->firewallConfig['ip2location_bin_access_mode']
+            ]
+        );
+
+        if (!$binAccessMode) {
+            return true;
+        }
+
+        $firewallConfig = $this->firewallPackage->setIp2locationBinAccessMode($binAccessMode['bin access mode']);
+
+        if ($firewallConfig) {
+            $this->showFirewall();
+
+            return true;
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
     protected function firewallSetIp2locationIoKey($args)
     {
         if (!$this->firewallConfig) {
@@ -752,6 +842,8 @@ class Firewall extends Modules
 
     public function onInstall() : object
     {
+        $this->terminal->setCommandIgnoreChars(['.',':']);
+
         $this->terminal->config['modules']['firewall']['banner'] =
             'PHPTerminal-modules-firewall is an firewall module for PHPTerminal to manage PHPFirewall library.';
 
