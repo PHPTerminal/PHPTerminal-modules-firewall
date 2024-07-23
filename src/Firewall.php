@@ -165,6 +165,27 @@ class Firewall extends Modules
             ]
         );
 
+        array_push($commands,
+            [
+                "availableAt"   => "config",
+                "command"       => "",
+                "description"   => "",
+                "function"      => ""
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "",
+                "description"   => "firewall get commands",
+                "function"      => ""
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "firewall get latest bin",
+                "description"   => "firewall get latest bin",
+                "function"      => "firewall"
+            ]
+        );
+
         //Filter Commands
         array_push($commands,
             [
@@ -546,7 +567,7 @@ class Firewall extends Modules
             [
                 'bin file code' =>
                     [
-                        'DB1BIN','DB2BIN','DB3BIN','DB4BIN','DB5BIN','DB6BIN','DB7BIN','DB8BIN','DB9BIN','DB10BIN','DB11BIN','DB12BIN','DB13BIN','DB14BIN','DB15BIN','DB16BIN','DB17BIN','DB18BIN','DB19BIN','DB20BIN','DB21BIN','DB22BIN','DB23BIN','DB24BIN','DB25BIN','DB26BIN','DB1BINIPV6','DB2BINIPV6','DB3BINIPV6','DB4BINIPV6','DB5BINIPV6','DB6BINIPV6','DB7BINIPV6','DB8BINIPV6','DB9BINIPV6','DB10BINIPV6','DB11BINIPV6','DB12BINIPV6','DB13BINIPV6','DB14BINIPV6','DB15BINIPV6','DB16BINIPV6','DB17BINIPV6','DB18BINIPV6','DB19BINIPV6','DB20BINIPV6','DB21BINIPV6','DB22BINIPV6','DB23BINIPV6','DB24BINIPV6','DB25BINIPV6','DB26BINIPV6','DB1LITEBIN','DB3LITEBIN','DB5LITEBIN','DB9LITEBIN','DB11LITEBIN','DB1LITEBINIPV6','DB3LITEBINIPV6','DB5LITEBINIPV6','DB9LITEBINIPV6','DB11LITEBINIPV6'
+                        'DB3BINIPV6','DB3LITEBINIPV6'
                     ]
             ],
             [],
@@ -630,6 +651,99 @@ class Firewall extends Modules
         }
 
         $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function firewallGetLatestBin()
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        if (!isset($this->firewallConfig['ip2location_api_key']) ||
+            (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] == 'null')
+        ) {
+            $this->terminal->addResponse('Please set IP2Location API key!', 1);
+
+            return false;
+        }
+
+        \cli\line('');
+        \cli\line('%bDownloading...');
+        \cli\line('');
+
+        $confimation = $this->terminal->inputToArray(
+            ['get latest version of bin file: ' . $this->firewallConfig['ip2location_bin_file_code']],
+            [
+                'get latest version of bin file: ' . $this->firewallConfig['ip2location_bin_file_code'] =>
+                    [
+                        'Y', 'N'
+                    ]
+            ]
+        );
+
+        if (!$confimation ||
+            ($confimation && $confimation['get latest version of bin file: ' . $this->firewallConfig['ip2location_bin_file_code']] === 'N')
+        ) {
+            return true;
+        }
+
+        \cli\line('');
+        \cli\line('%bDownloading...%w');
+        \cli\line('');
+
+        $download = $this->terminal->downloadData(
+                'https://www.ip2location.com/download/?token=' . $this->firewallConfig['ip2location_api_key'] . '&file=' . $this->firewallConfig['ip2location_bin_file_code'],
+                fwbase_path('firewalldata/ip2locationdata/' . $this->firewallConfig['ip2location_bin_file_code'] . '.ZIP')
+            );
+
+        if ($download) {
+            if ($this->terminal->trackCounter === 0) {
+                $this->terminal->addResponse('Error while downloading file: ' . $download->getBody()->getContents(), 1);
+            }
+
+            \cli\line('');
+            \cli\line('%bExtracting...%w');
+            \cli\line('');
+            //Extract here.
+            $zip = new \ZipArchive;
+
+            if ($zip->open(fwbase_path('firewalldata/ip2locationdata/DB3LITEBINIPV6.ZIP')) === true) {
+                $zip->extractTo(fwbase_path('firewalldata/ip2locationdata/'));
+
+                $zip->close();
+            }
+        }
+
+        //Rename file to the bin file code name.
+        try {
+            $this->terminal->setLocalContent(false, fwbase_path('firewalldata/ip2locationdata/'));
+
+            $folderContents = $this->terminal->localContent->listContents('');
+
+            $renamedFile = false;
+
+            foreach ($folderContents as $key => $content) {
+                if ($content instanceof \League\Flysystem\FileAttributes) {
+                    if (str_contains($content->path(), '.BIN')) {
+                        $this->terminal->localContent->move($content->path(), $this->firewallConfig['ip2location_bin_file_code'] . '.BIN');
+                        $renamedFile = true;
+
+                        break;
+                    }
+                }
+            }
+            if (!$renamedFile){
+                throw new \Exception('ip2locationdata has no files');
+            }
+        } catch (\League\Flysystem\UnableToListContents | \throwable | \League\Flysystem\UnableToMoveFile | \League\Flysystem\FilesystemException $e) {
+            throw $e;
+        }
+
+        $this->firewallPackage->setConfigIp2locationBinDownloadDate();
 
         return true;
     }
