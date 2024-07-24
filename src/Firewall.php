@@ -162,6 +162,12 @@ class Firewall extends Modules
                 "command"       => "firewall set ip2location io key",
                 "description"   => "firewall set ip2location io key. Set key as null to remove the key",
                 "function"      => "firewall"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "firewall set ip2location primary lookup method",
+                "description"   => "firewall set ip2location primary lookup method. Lookup first in API or in downloaded BIN file? If found, secondary method is discarded.",
+                "function"      => "firewall"
             ]
         );
 
@@ -643,6 +649,48 @@ class Firewall extends Modules
         $key = $this->terminal->inputToArray(['enter key']);
 
         $firewallConfig = $this->firewallPackage->setConfigIp2locationIoKey($key['enter key']);
+
+        if ($firewallConfig) {
+            $this->showFirewall();
+
+            return true;
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function firewallSetIp2locationPrimaryLookupMethod($args)
+    {
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
+
+        $primaryLookupMethod = $this->terminal->inputToArray(
+            ['primary lookup method'],
+            [
+                'primary lookup method' =>
+                    [
+                        'API', 'BIN'
+                    ]
+            ],
+            [],
+            [
+                'primary lookup method' => $this->firewallConfig['ip2location_primary_lookup_method']
+            ],
+            [
+                'primary lookup method' => true
+            ]
+        );
+
+        if (!$primaryLookupMethod) {
+            return true;
+        }
+
+        $firewallConfig = $this->firewallPackage->setIp2locationPrimaryLookupMethod($primaryLookupMethod['primary lookup method']);
 
         if ($firewallConfig) {
             $this->showFirewall();
