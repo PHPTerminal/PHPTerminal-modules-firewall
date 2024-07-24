@@ -39,6 +39,12 @@ class Firewall extends Modules
         if (isset($firewall['response']['responseCode']) && $firewall['response']['responseCode'] == 0) {
             $this->firewallConfig = $firewall['response']['responseData'];
         }
+
+        if (!$this->firewallConfig) {
+            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
+
+            return false;
+        }
     }
 
     public function getCommands() : array
@@ -77,6 +83,12 @@ class Firewall extends Modules
                 ],
                 [
                     "availableAt"   => "enable",
+                    "command"       => "",
+                    "description"   => "IP Commands",
+                    "function"      => ""
+                ],
+                [
+                    "availableAt"   => "enable",
                     "command"       => "firewall check ip",
                     "description"   => "firewall check ip {address}. Check state of an ip address, if it is being blocked/allowed/monitored by the firewall.",
                     "function"      => "firewall"
@@ -94,6 +106,40 @@ class Firewall extends Modules
                 ],
             );
         }
+
+        //Geo Commands
+        array_push($commands,
+            [
+                "availableAt"   => "enable",
+                "command"       => "",
+                "description"   => "",
+                "function"      => ""
+            ],
+            [
+                "availableAt"   => "enable",
+                "command"       => "",
+                "description"   => "Geo Commands",
+                "function"      => ""
+            ],
+            [
+                "availableAt"   => "enable",
+                "command"       => "geo show countries",
+                "description"   => "Show list of countries.",
+                "function"      => "geo"
+            ],
+            [
+                "availableAt"   => "enable",
+                "command"       => "geo show states",
+                "description"   => "geo show states {country_code}. Show list of states of a country.",
+                "function"      => "geo"
+            ],
+            [
+                "availableAt"   => "enable",
+                "command"       => "geo show cities",
+                "description"   => "geo show cities {country_code} {state_code}. Show list of cities of a state.",
+                "function"      => "geo"
+            ],
+        );
 
         //Set Commands
         array_push($commands,
@@ -187,7 +233,13 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "firewall get latest bin",
-                "description"   => "firewall get latest bin",
+                "description"   => "firewall get latest bin from ip2location site using API key.",
+                "function"      => "firewall"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "firewall get latest geodata",
+                "description"   => "firewall get latest geodata from github.com/dr5hn/ repository.",
                 "function"      => "firewall"
             ]
         );
@@ -203,7 +255,7 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "",
-                "description"   => "filter commands",
+                "description"   => "firewall filter commands",
                 "function"      => ""
             ],
             [
@@ -231,12 +283,6 @@ class Firewall extends Modules
 
     protected function showFirewall()
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         $this->getFirewallConfig();
 
         $this->terminal->addResponse('', 0, ['Firewall Details' => $this->firewallConfig]);
@@ -321,12 +367,6 @@ class Firewall extends Modules
 
     protected function showFilter($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         //Address
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please enter correct id', 1);
@@ -392,12 +432,6 @@ class Firewall extends Modules
 
     protected function firewallSetStatus($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide status', 1);
 
@@ -419,12 +453,6 @@ class Firewall extends Modules
 
     protected function firewallSetFilter($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide filter ip type. Options: v4/v6', 1);
 
@@ -452,12 +480,6 @@ class Firewall extends Modules
 
     protected function firewallSetRange($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide filter range type. Options: private/reserved', 1);
 
@@ -485,12 +507,6 @@ class Firewall extends Modules
 
     protected function firewallSetDefaultFilter($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide default filter state. Options: allow/block', 1);
 
@@ -512,12 +528,6 @@ class Firewall extends Modules
 
     protected function firewallSetAutoUnblock($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide correct minutes.', 1);
 
@@ -539,12 +549,6 @@ class Firewall extends Modules
 
     protected function firewallSetIp2locationKey($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         $key = $this->terminal->inputToArray(['enter key']);
 
         $firewallConfig = $this->firewallPackage->setConfigIp2locationKey($key['enter key']);
@@ -562,12 +566,6 @@ class Firewall extends Modules
 
     protected function firewallSetIp2locationBinFileCode($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         $binFileCode = $this->terminal->inputToArray(
             ['bin file code'],
             [
@@ -601,12 +599,6 @@ class Firewall extends Modules
 
     protected function firewallSetIp2locationBinAccessMode($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         $binAccessMode = $this->terminal->inputToArray(
             ['bin access mode'],
             [
@@ -640,12 +632,6 @@ class Firewall extends Modules
 
     protected function firewallSetIp2locationIoKey($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         $key = $this->terminal->inputToArray(['enter key']);
 
         $firewallConfig = $this->firewallPackage->setConfigIp2locationIoKey($key['enter key']);
@@ -663,12 +649,6 @@ class Firewall extends Modules
 
     protected function firewallSetIp2locationPrimaryLookupMethod($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         $primaryLookupMethod = $this->terminal->inputToArray(
             ['primary lookup method'],
             [
@@ -705,12 +685,6 @@ class Firewall extends Modules
 
     protected function firewallGetLatestBin()
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($this->firewallConfig['ip2location_api_key']) ||
             (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] == 'null')
         ) {
@@ -718,10 +692,6 @@ class Firewall extends Modules
 
             return false;
         }
-
-        \cli\line('');
-        \cli\line('%bDownloading...');
-        \cli\line('');
 
         $confimation = $this->terminal->inputToArray(
             ['get latest version of bin file: ' . $this->firewallConfig['ip2location_bin_file_code']],
@@ -740,8 +710,6 @@ class Firewall extends Modules
         }
 
         \cli\line('');
-        \cli\line('%bDownloading...%w');
-        \cli\line('');
 
         $download = $this->terminal->downloadData(
                 'https://www.ip2location.com/download/?token=' . $this->firewallConfig['ip2location_api_key'] . '&file=' . $this->firewallConfig['ip2location_bin_file_code'],
@@ -749,49 +717,134 @@ class Firewall extends Modules
             );
 
         if ($download) {
-            if ($this->terminal->trackCounter === 0) {
-                $this->terminal->addResponse('Error while downloading file: ' . $download->getBody()->getContents(), 1);
+            if ($this->terminal->trackCounter !== 0) {
+                \cli\line('');
+                \cli\line('%bProcessing download...%w');
+                \cli\line('');
             }
 
-            \cli\line('');
-            \cli\line('%bExtracting...%w');
-            \cli\line('');
-            //Extract here.
-            $zip = new \ZipArchive;
-
-            if ($zip->open(fwbase_path('firewalldata/ip2locationdata/DB3LITEBINIPV6.ZIP')) === true) {
-                $zip->extractTo(fwbase_path('firewalldata/ip2locationdata/'));
-
-                $zip->close();
-            }
+            $this->firewallPackage->processDownloadedBinFile($download, $this->terminal->trackCounter);
         }
 
-        //Rename file to the bin file code name.
-        try {
-            $this->terminal->setLocalContent(false, fwbase_path('firewalldata/ip2locationdata/'));
+        $this->addFirewallResponseToTerminalResponse();
 
-            $folderContents = $this->terminal->localContent->listContents('');
+        return true;
+    }
 
-            $renamedFile = false;
+    protected function geoShowCountries()
+    {
+        $countries = $this->firewallPackage->geoGetCountries();
 
-            foreach ($folderContents as $key => $content) {
-                if ($content instanceof \League\Flysystem\FileAttributes) {
-                    if (str_contains($content->path(), '.BIN')) {
-                        $this->terminal->localContent->move($content->path(), $this->firewallConfig['ip2location_bin_file_code'] . '.BIN');
-                        $renamedFile = true;
-
-                        break;
-                    }
-                }
-            }
-            if (!$renamedFile){
-                throw new \Exception('ip2locationdata has no files');
-            }
-        } catch (\League\Flysystem\UnableToListContents | \throwable | \League\Flysystem\UnableToMoveFile | \League\Flysystem\FilesystemException $e) {
-            throw $e;
+        if ($countries) {
+            $this->terminal->addResponse(
+                '',
+                0,
+                ['countries' => $countries],
+                true,
+                ['id', 'country_code', 'name'],
+                [10,20,100]
+            );
+        } else  {
+            $this->terminal->addResponse('No countries database available. Please download database from configuration mode!', 1);
         }
 
-        $this->firewallPackage->setConfigIp2locationBinDownloadDate();
+        return true;
+    }
+
+    protected function geoShowStates($args)
+    {
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please provide country code. Run command geo show countries to grab the code.', 1);
+
+            return false;
+        }
+
+        $states = $this->firewallPackage->geoGetStates(strtoupper($args[0]));
+
+        if ($states) {
+            $this->terminal->addResponse(
+                '',
+                0,
+                ['states' => $states],
+                true,
+                ['id', 'state_code', 'country_code', 'name'],
+                [10,20,20,100]
+            );
+        } else  {
+            $this->terminal->addResponse('No states database available. Please download database from configuration mode!', 1);
+        }
+
+        return true;
+    }
+
+    protected function geoShowCities($args)
+    {
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please provide country code. Run command geo show countries to grab the code.', 1);
+
+            return false;
+        }
+
+        if (!isset($args[1])) {
+            $this->terminal->addResponse('Please provide state code. Run command geo show states {country_code} to grab the code.', 1);
+
+            return false;
+        }
+
+        $cities = $this->firewallPackage->geoGetCities(strtoupper($args[0]), strtoupper($args[1]));
+
+        if ($cities) {
+            $this->terminal->addResponse(
+                '',
+                0,
+                ['cities' => $cities],
+                true,
+                ['id', 'state_code', 'country_code', 'name'],
+                [10,20,20,100]
+            );
+        } else  {
+            $this->terminal->addResponse('No cities database available. Please download database from configuration mode!', 1);
+        }
+
+        return true;
+    }
+
+    protected function firewallGetLatestGeodata()
+    {
+        $confimation = $this->terminal->inputToArray(
+            ['get latest version of geodata'],
+            [
+                'get latest version of geodata' =>
+                    [
+                        'Y', 'N'
+                    ]
+            ]
+        );
+
+        if (!$confimation ||
+            ($confimation && $confimation['get latest version of geodata'] === 'N')
+        ) {
+            return true;
+        }
+
+        \cli\line('');
+
+        $download = $this->terminal->downloadData(
+                'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/countries%2Bstates%2Bcities.json',
+                fwbase_path('firewalldata/geodata/countries+states+cities.json')
+            );
+
+        if (true) {
+            if ($this->terminal->trackCounter !== 0) {
+                \cli\line('');
+                \cli\line('%bProcessing download, this will take sometime...%w');
+                \cli\line('');
+            }
+
+            $this->firewallPackage->processDownloadedGeodataFile($download, $this->terminal->trackCounter);
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
 
         return true;
     }
@@ -821,12 +874,6 @@ class Firewall extends Modules
 
     protected function firewallCheckIp($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide correct ip address', 1);
 
@@ -842,12 +889,6 @@ class Firewall extends Modules
 
     protected function firewallShowIpDetails($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide correct ip address', 1);
 
@@ -863,12 +904,6 @@ class Firewall extends Modules
 
     protected function filterAdd($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         //Filter Type
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please enter correct filter type', 1);
@@ -932,12 +967,6 @@ class Firewall extends Modules
 
     protected function filterUpdate($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0]) || !isset($args[1])) {
             $this->terminal->addResponse('Please provide filter ID and filter type', 1);
 
@@ -971,12 +1000,6 @@ class Firewall extends Modules
 
     protected function filterRemove($args)
     {
-        if (!$this->firewallConfig) {
-            $this->terminal->addResponse('Error retrieving firewall details. Contact developer!', 1);
-
-            return false;
-        }
-
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide filter ID', 1);
 
