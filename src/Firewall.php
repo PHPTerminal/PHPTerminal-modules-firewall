@@ -67,7 +67,7 @@ class Firewall extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "show filters",
-                    "description"   => "Show firewall filters",
+                    "description"   => "Show firewall filters. show filters {limit} {page}, will set page limit. Use the keyword default in the end to search default filters data storage.",
                     "function"      => "show"
                 ],
                 [
@@ -79,7 +79,7 @@ class Firewall extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "search filter",
-                    "description"   => "search filter {address}. Ex: fw search filter 10.0.0. This command performs a like search, so anything with 10.0.0 will be searched in addresses.",
+                    "description"   => "search filter {address}. Ex: fw search filter 10.0.0. This command performs a like search, so anything with 10.0.0 will be searched in addresses. Use the keyword default in the end to search default filters data storage.",
                     "function"      => "search"
                 ],
                 [
@@ -1103,7 +1103,29 @@ class Firewall extends Modules
             return false;
         }
 
-        $filter = $this->firewallPackage->checkIp($args[0]);
+        $this->firewallPackage->checkIp($args[0]);
+
+        $microtimers = $this->firewallPackage->getMicroTimer();
+
+        if ($microtimers && count($microtimers) > 0) {
+            foreach ($microtimers as $time) {
+                if (str_contains(strtolower($time['reference']), 'end')) {
+                    $totalTime = $time['difference'];
+                    if (str_contains(strtolower($time['memoryusage']), 'nan')) {
+                        $time['memoryusage'] = str_replace('NAN', '0', $time['memoryusage']);
+                    }
+                    $totalMemoryUsage = $time['memoryusage'];
+                    $method = str_replace('CheckIpFilterEnd', '', $time['reference']);
+
+                    break;
+                }
+            }
+        }
+
+        if (isset($totalTime) && isset($totalMemoryUsage) && isset($method)) {
+            \cli\line('');
+            \cli\line('%bEntry found in %c' . $method . '%b database. It took ' . $totalTime . '(s) and ' . $totalMemoryUsage . ' of memory.%w');
+        }
 
         $this->addFirewallResponseToTerminalResponse();
 
@@ -1118,7 +1140,7 @@ class Firewall extends Modules
             return false;
         }
 
-        $filter = $this->firewallPackage->getIpDetailsFromIp2locationAPI($args[0]);
+        $this->firewallPackage->getIpDetailsFromIp2locationAPI($args[0]);
 
         $this->addFirewallResponseToTerminalResponse();
 
