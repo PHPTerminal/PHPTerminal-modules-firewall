@@ -3,6 +3,7 @@
 namespace PHPTerminalModulesFirewall;
 
 use Carbon\Carbon;
+use JasonGrimes\Paginator;
 use PHPFirewall\Firewall as PHPFirewallFirewall;
 use PHPTerminal\Modules;
 use PHPTerminal\Terminal;
@@ -59,27 +60,27 @@ class Firewall extends Modules
                 ],
                 [
                     "availableAt"   => "enable",
-                    "command"       => "fw show run",
+                    "command"       => "show run",
                     "description"   => "Show firewall module running configuration",
-                    "function"      => "fw"
+                    "function"      => "show"
                 ],
                 [
                     "availableAt"   => "enable",
-                    "command"       => "fw show filters",
+                    "command"       => "show filters",
                     "description"   => "Show firewall filters",
-                    "function"      => "fw"
+                    "function"      => "show"
                 ],
                 [
                     "availableAt"   => "enable",
-                    "command"       => "fw show filter",
+                    "command"       => "show filter",
                     "description"   => "show filter {id}",
-                    "function"      => "fw"
+                    "function"      => "show"
                 ],
                 [
                     "availableAt"   => "enable",
-                    "command"       => "fw search filter",
-                    "description"   => "fw search filter {address}. Ex: fw search filter 10.0.0. This command performs a like search, so anything with 10.0.0 will be searched in addresses.",
-                    "function"      => "fw"
+                    "command"       => "search filter",
+                    "description"   => "search filter {address}. Ex: fw search filter 10.0.0. This command performs a like search, so anything with 10.0.0 will be searched in addresses.",
+                    "function"      => "search"
                 ],
                 [
                     "availableAt"   => "enable",
@@ -95,9 +96,9 @@ class Firewall extends Modules
                 ],
                 [
                     "availableAt"   => "enable",
-                    "command"       => "fw check ip",
-                    "description"   => "fw check ip {address}. Check state of an ip address, if it is being blocked/allowed/monitored by the firewall.",
-                    "function"      => "fw"
+                    "command"       => "check ip",
+                    "description"   => "check ip {address}. Check state of an ip address, if it is being blocked/allowed/monitored by the firewall.",
+                    "function"      => "check"
                 ],
             ];
 
@@ -106,9 +107,9 @@ class Firewall extends Modules
             array_push($commands,
                 [
                     "availableAt"   => "enable",
-                    "command"       => "fw show ip details",
-                    "description"   => "fw show ip details {address}. Get ip details from ip2location io API.",
-                    "function"      => "fw"
+                    "command"       => "show ip details",
+                    "description"   => "show ip details {address}. Get ip details from ip2location io API.",
+                    "function"      => "show"
                 ],
             );
         }
@@ -129,21 +130,21 @@ class Firewall extends Modules
             ],
             [
                 "availableAt"   => "enable",
-                "command"       => "geo show countries",
+                "command"       => "show geo countries",
                 "description"   => "Show list of countries.",
-                "function"      => "geo"
+                "function"      => "show"
             ],
             [
                 "availableAt"   => "enable",
-                "command"       => "geo show states",
-                "description"   => "geo show states {country_code}. Show list of states of a country.",
-                "function"      => "geo"
+                "command"       => "show geo states",
+                "description"   => "show geo states {country_code}. Show list of states of a country.",
+                "function"      => "show"
             ],
             [
                 "availableAt"   => "enable",
-                "command"       => "geo show cities",
-                "description"   => "geo show cities {country_code} {state_code}. Show list of cities of a state.",
-                "function"      => "geo"
+                "command"       => "show geo cities",
+                "description"   => "show geo cities {country_code} {state_code}. Show list of cities of a state.",
+                "function"      => "show"
             ],
         );
 
@@ -157,72 +158,97 @@ class Firewall extends Modules
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set status",
-                "description"   => "fw set status {status}. Status options: enable/disable/monitor.",
-                "function"      => "fw"
+                "command"       => "set status",
+                "description"   => "set status {status}. Status options: enable/disable/monitor.",
+                "function"      => "set"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set filter",
-                "description"   => "fw set filter {ip_type} {status}. Ip_type options: v4/v6, Status options: enable/disable.",
-                "function"      => "fw"
+                "command"       => "set filter",
+                "description"   => "set filter {ip_type} {status}. Ip_type options: v4/v6, Status options: enable/disable.",
+                "function"      => "set"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set range",
-                "description"   => "fw set range {range_type} {status}. Range_type options: private/reserved, Status options: enable/disable.",
-                "function"      => "fw"
+                "command"       => "set range",
+                "description"   => "set range {range_type} {status}. Range_type options: private/reserved, Status options: enable/disable.",
+                "function"      => "set"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set default filter",
-                "description"   => "fw set default filter {state}. Status options: allow/block.",
-                "function"      => "fw"
+                "command"       => "",
+                "description"   => "",
+                "function"      => ""
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw reset default filter hit count",
-                "description"   => "fw reset default filter hit count. Resets default filter hit counts to 0.",
-                "function"      => "fw"
+                "command"       => "set default filter",
+                "description"   => "set default filter {state}. Status options: allow/block.",
+                "function"      => "set"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set auto unblock",
-                "description"   => "fw set auto unblock {minutes}. After X minutes firewall will auto unblock IP from block state. Disable the feature by setting minutes to 0.",
-                "function"      => "fw"
+                "command"       => "reset default filter hit count",
+                "description"   => "reset default filter hit count. Resets default filter hit counts to 0.",
+                "function"      => "reset"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set ip2location key",
-                "description"   => "fw set ip2location key. Set key as null to remove the key",
-                "function"      => "fw"
+                "command"       => "",
+                "description"   => "",
+                "function"      => ""
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set ip2location bin file code",
-                "description"   => "fw set ip2location bin file code.",
-                "function"      => "fw"
+                "command"       => "set auto unblock",
+                "description"   => "set auto unblock {minutes}. After X minutes firewall will auto unblock IP from block state. Disable the feature by setting minutes to 0.",
+                "function"      => "set"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set ip2location bin access mode",
-                "description"   => "fw set ip2location bin access mode.",
-                "function"      => "fw"
+                "command"       => "set auto indexing",
+                "description"   => "set auto indexing {status}. Status options: enable/disable.",
+                "function"      => "set"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set ip2location io key",
-                "description"   => "fw set ip2location io key. Set key as null to remove the key",
-                "function"      => "fw"
+                "command"       => "",
+                "description"   => "",
+                "function"      => ""
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw set ip2location primary lookup method",
-                "description"   => "fw set ip2location primary lookup method. Lookup first in API or in downloaded BIN file? If found, secondary method is discarded.",
-                "function"      => "fw"
+                "command"       => "set ip2location key",
+                "description"   => "set ip2location key. Set key as null to remove the key",
+                "function"      => "set"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "set ip2location bin file code",
+                "description"   => "set ip2location bin file code.",
+                "function"      => "set"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "set ip2location bin access mode",
+                "description"   => "set ip2location bin access mode.",
+                "function"      => "set"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "set ip2location io key",
+                "description"   => "set ip2location io key. Set key as null to remove the key",
+                "function"      => "set"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "set ip2location primary lookup method",
+                "description"   => "set ip2location primary lookup method. Lookup first in API or in downloaded BIN file? If found, secondary method is discarded.",
+                "function"      => "set"
             ]
         );
 
+        //Get Commands
         array_push($commands,
             [
                 "availableAt"   => "config",
@@ -238,15 +264,15 @@ class Firewall extends Modules
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw get latest bin",
-                "description"   => "fw get latest bin from ip2location site using API key.",
-                "function"      => "fw"
+                "command"       => "get latest bin",
+                "description"   => "get latest bin from ip2location site using API key.",
+                "function"      => "get"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw get latest geodata",
-                "description"   => "fw get latest geodata from github.com/dr5hn/ repository.",
-                "function"      => "fw"
+                "command"       => "get latest geodata",
+                "description"   => "get latest geodata from github.com/dr5hn/ repository.",
+                "function"      => "get"
             ]
         );
 
@@ -266,28 +292,28 @@ class Firewall extends Modules
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw filter add",
-                "description"   => "fw filter add {filter_type} {address_type} {ip_address|network/subnet|country_iso2_code:region:city}. filter_type options: allow, block, monitor. address_type options: host, network, ip2location.",
-                "function"      => "fw"
+                "command"       => "filter add",
+                "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|country_iso2_code:region:city}. filter_type options: allow, block, monitor. address_type options: host, network, ip2location.",
+                "function"      => "filter"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw filter update",
-                "description"   => "fw filter update {filter_id} {filter_type}. Update filter type. filter_type options: allow, block, monitor.",
-                "function"      => "fw"
+                "command"       => "filter update",
+                "description"   => "filter update {filter_id} {filter_type}. Update filter type. filter_type options: allow, block, monitor.",
+                "function"      => "filter"
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "fw filter remove",
-                "description"   => "fw filter remove {filter_id}. Remove a filter",
-                "function"      => "fw"
+                "command"       => "filter remove",
+                "description"   => "filter remove {filter_id}. Remove a filter",
+                "function"      => "filter"
             ]
         );
 
         return $commands;
     }
 
-    protected function fwShowRun()
+    protected function showRun()
     {
         $this->getFirewallConfig();
 
@@ -296,8 +322,34 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwShowFilters($args = [], $filters = null, $getDefault = false)
+    protected function showFilters($args = [], $filters = null, $getDefault = false)
     {
+        if (in_array('default', $args)) {
+            if (isset($args[1]) && ((int) $args[1] === 0 || (int) $args[1] > 500)) {
+                $this->terminal->addResponse('Limit value should be a number. Please provide correct value. Max is 500.', 1);
+
+                return true;
+            }
+
+            if (isset($args[2]) && (int) $args[2] === 0) {
+                $this->terminal->addResponse('Page number value should be a number. Please provide correct value!', 1);
+
+                return true;
+            }
+        } else {
+            if (isset($args[0]) && ((int) $args[0] === 0 || (int) $args[0] > 500)) {
+                $this->terminal->addResponse('Limit value should be a number. Please provide correct value. Max is 500.', 1);
+
+                return true;
+            }
+
+            if (isset($args[1]) && (int) $args[1] === 0) {
+                $this->terminal->addResponse('Page number value should be a number. Please provide correct value!', 1);
+
+                return true;
+            }
+        }
+
         if (!$filters) {
             $getDefault = false;
 
@@ -328,6 +380,8 @@ class Firewall extends Modules
                     $filters = $filters['response']['responseData']['filters'];
                 }
             }
+        } else {
+            $totalItems = count($filters);
         }
 
         if (isset($this->terminal->config['plugins']['auth']['class'])) {
@@ -350,6 +404,35 @@ class Firewall extends Modules
             }
         });
 
+        if (!$getDefault) {//filters may vary as we do not show hosts that have parents.
+            $totalItems = count($filters);
+        }
+
+        //We create pagination for the items.
+        if (in_array('default', $args)) {
+            $itemsPerPage = $args[1] ?? 20;
+            $currentPage = $args[2] ?? 1;
+        } else {
+            $itemsPerPage = $args[0] ?? 20;
+            $currentPage = $args[1] ?? 1;
+        }
+
+        $paginator = new Paginator((int) $totalItems, (int) $itemsPerPage, (int) $currentPage);
+        if ($paginator->getNumPages() > 3) {
+            $paginator->setMaxPagesToShow($paginator->getNumPages());
+        }
+
+        $pages = $paginator->getPages();
+        //The package paginator is designed to show minimum 3 pages worth of data, which is quite weird.
+        //We have to add a dummy array to pages, so that the while look will work once.
+        if (count($pages) === 0) {
+            $pages[0] = [];
+        }
+
+        $filters = array_chunk($filters, $itemsPerPage);
+
+        $pageCounter = $paginator->getCurrentPage() - 1;
+
         $headers =
             [
                 'id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at'
@@ -369,19 +452,66 @@ class Firewall extends Modules
                 ];
         }
 
-        $this->terminal->addResponse(
-            '',
-            0,
-            ['Filters' => $filters],
-            true,
-            $headers,
-            $columns
-        );
+        while (isset($pages[$pageCounter])) {
+            $rows = $filters[$pageCounter];
+
+            array_walk($rows, function(&$row) use ($headers, $getDefault) {
+                if (!$getDefault) {
+                    if (key_exists('parent_id', $row)) {
+                        unset($row['parent_id']);
+                    }
+                }
+                $row = array_replace(array_flip($headers), $row);
+                $row = array_values($row);
+            });
+
+            $table = new \cli\Table();
+            $table->setHeaders($headers);
+            $table->setRows($rows);
+            $table->setRenderer(new \cli\table\Ascii($columns));
+            $table->display();
+
+            $lastpage = false;
+            $rowsCount = count($rows);
+            if (($pageCounter + 1) === count($pages)) {
+                $rowsCounter = $totalItems;
+                $lastpage = true;
+            } else {
+                $rowsCounter = ($rowsCount * ($pageCounter + 1));
+            }
+            \cli\line('%cShowing record : ' . $rowsCounter . '/' . $totalItems . '. Page : ' . ($pageCounter + 1) . '/' . count($pages) . '. ');
+            if ($lastpage) {
+                \cli\line('%w');
+                return true;
+            }
+            \cli\line('%bHit space bar or n for next page, p for previous page, q to quit%w' . PHP_EOL);
+
+            readline_callback_handler_install("", function () {});
+
+            while (true) {
+                $input = stream_get_contents(STDIN, 1);
+
+                if (ord($input) == 32 || ord($input) == 110 || ord($input) == 78) {//Next space or n
+                    $pageCounter++;
+
+                    break;
+                } else if (ord($input) == 112 || ord($input) == 80) {//Previous
+                    $pageCounter--;
+
+                    break;
+                } else if (ord($input) == 113 || ord($input) == 81) {
+                    readline_callback_handler_remove();
+                    return true;
+                }
+            }
+
+            readline_callback_handler_remove();
+        }
 
         return true;
     }
 
-    protected function fwSearchFilter($args)
+    protected function searchFilter($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please enter address search string.', 1);
@@ -396,15 +526,41 @@ class Firewall extends Modules
         }
 
         $getDefault = false;
-
-        if (isset($args[1]) && $args[1] === 'default') {
+        if (in_array('default', $args)) {
             $getDefault = true;
+
+            if (isset($args[2]) && ((int) $args[2] === 0 || (int) $args[2] > 500)) {
+                $this->terminal->addResponse('Limit value should be a number. Please provide correct value. Max is 500', 1);
+
+                return true;
+            }
+
+            if (isset($args[3]) && (int) $args[3] === 0) {
+                $this->terminal->addResponse('Page number value should be a number. Please provide correct value!', 1);
+
+                return true;
+            }
+        } else {
+            if (isset($args[1]) && ((int) $args[1] === 0 || (int) $args[1] > 500)) {
+                $this->terminal->addResponse('Limit value should be a number. Please provide correct value. Max is 500', 1);
+
+                return true;
+            }
+
+            if (isset($args[2]) && (int) $args[2] === 0) {
+                $this->terminal->addResponse('Page number value should be a number. Please provide correct value!', 1);
+
+                return true;
+            }
         }
 
         $filters = $this->firewallPackage->searchFilterByAddress($args[0], $getDefault);
 
         if ($filters) {
-            return $this->fwShowFilters([], $filters, $getDefault);
+            unset($args[0]);
+            $args = array_values($args);
+
+            return $this->showFilters($args, $filters, $getDefault);
         }
 
         $this->addFirewallResponseToTerminalResponse();
@@ -412,7 +568,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwShowFilter($args)
+    protected function showFilter($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please enter correct id', 1);
@@ -476,7 +632,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetStatus($args)
+    protected function setStatus($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide status', 1);
@@ -487,7 +643,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setConfigStatus($args[0]);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -497,7 +653,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetFilter($args)
+    protected function setFilter($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide filter ip type. Options: v4/v6', 1);
@@ -514,7 +670,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setConfigFilter($args[0], $args[1]);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -524,7 +680,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetRange($args)
+    protected function setRange($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide filter range type. Options: private/reserved', 1);
@@ -541,7 +697,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setConfigRange($args[0], $args[1]);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -551,7 +707,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetDefaultFilter($args)
+    protected function setDefaultFilter($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide default filter state. Options: allow/block', 1);
@@ -562,7 +718,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setConfigDefaultFilter($args[0]);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -572,7 +728,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetAutoUnblock($args)
+    protected function setAutoUnblock($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide correct minutes.', 1);
@@ -583,7 +739,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setConfigAutoUnblockIpMinutes((int) $args[0]);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -593,14 +749,35 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetIp2locationKey($args)
+    protected function setAutoIndexing($args)
+    {
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please provide default filter state. Options: enable/disable', 1);
+
+            return false;
+        }
+
+        $firewallConfig = $this->firewallPackage->setAutoIndexing($args[0]);
+
+        if ($firewallConfig) {
+            $this->showRun();
+
+            return true;
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function setIp2locationKey($args)
     {
         $key = $this->terminal->inputToArray(['enter key']);
 
         $firewallConfig = $this->firewallPackage->setConfigIp2locationKey($key['enter key']);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -610,7 +787,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetIp2locationBinFileCode($args)
+    protected function setIp2locationBinFileCode($args)
     {
         $binFileCode = $this->terminal->inputToArray(
             ['bin file code'],
@@ -633,7 +810,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setIp2locationBinFileCode($binFileCode['bin file code']);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -643,7 +820,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetIp2locationBinAccessMode($args)
+    protected function setIp2locationBinAccessMode($args)
     {
         $binAccessMode = $this->terminal->inputToArray(
             ['bin access mode'],
@@ -666,7 +843,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setIp2locationBinAccessMode($binAccessMode['bin access mode']);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -676,14 +853,14 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetIp2locationIoKey($args)
+    protected function setIp2locationIoKey($args)
     {
         $key = $this->terminal->inputToArray(['enter key']);
 
         $firewallConfig = $this->firewallPackage->setConfigIp2locationIoKey($key['enter key']);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -693,7 +870,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwSetIp2locationPrimaryLookupMethod($args)
+    protected function setIp2locationPrimaryLookupMethod($args)
     {
         $primaryLookupMethod = $this->terminal->inputToArray(
             ['primary lookup method'],
@@ -719,7 +896,7 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setIp2locationPrimaryLookupMethod($primaryLookupMethod['primary lookup method']);
 
         if ($firewallConfig) {
-            $this->showFirewall();
+            $this->showRun();
 
             return true;
         }
@@ -729,7 +906,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwGetLatestBin()
+    protected function getLatestBin()
     {
         if (!isset($this->firewallConfig['ip2location_api_key']) ||
             (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] == 'null')
@@ -777,7 +954,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function geoShowCountries()
+    protected function showGeoCountries()
     {
         $countries = $this->firewallPackage->geoGetCountries();
 
@@ -797,7 +974,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function geoShowStates($args)
+    protected function showGeoStates($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide country code. Run command geo show countries to grab the code.', 1);
@@ -823,7 +1000,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function geoShowCities($args)
+    protected function showGeoCities($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide country code. Run command geo show countries to grab the code.', 1);
@@ -855,7 +1032,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwGetLatestGeodata()
+    protected function getLatestGeodata()
     {
         $confimation = $this->terminal->inputToArray(
             ['get latest version of geodata'],
@@ -895,7 +1072,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwResetDefaultFilterHitCount()
+    protected function resetDefaultFilterHitCount()
     {
         $resetConfirmationArr = $this->terminal->inputToArray(['confirm reset'], ['confirm reset' => 'yes/no']);
 
@@ -903,7 +1080,7 @@ class Firewall extends Modules
             $firewallConfig = $this->firewallPackage->resetConfigDefaultFilterHitCount();
 
             if ($firewallConfig) {
-                $this->showFirewall();
+                $this->showRun();
 
                 return true;
             }
@@ -918,7 +1095,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwCheckIp($args)
+    protected function checkIp($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide correct ip address', 1);
@@ -933,7 +1110,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwShowIpDetails($args)
+    protected function showIpDetails($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide correct ip address', 1);
@@ -948,7 +1125,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwFilterAdd($args)
+    protected function filterAdd($args)
     {
         //Filter Type
         if (!isset($args[0])) {
@@ -1011,7 +1188,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwFilterUpdate($args)
+    protected function filterUpdate($args)
     {
         if (!isset($args[0]) || !isset($args[1])) {
             $this->terminal->addResponse('Please provide filter ID and filter type', 1);
@@ -1044,7 +1221,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function fwFilterRemove($args)
+    protected function filterRemove($args)
     {
         if (!isset($args[0])) {
             $this->terminal->addResponse('Please provide filter ID', 1);
