@@ -277,7 +277,13 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "filter remove",
-                "description"   => "filter remove {filter_id}. Remove a filter",
+                "description"   => "filter remove {filter_id} {default}. Remove a filter from main filters. Add default keyword to remove from default data store.",
+                "function"      => "filter"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "filter move",
+                "description"   => "filter move {filter_id}. Move a filter from default store to main data store.",
                 "function"      => "filter"
             ]
         );
@@ -317,7 +323,7 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "filters reindex",
-                "description"   => "filters reindex {force}. Reindexes all host filters. Force keyword deletes all previous index and regenerates the index.",
+                "description"   => "filters reindex {force} {norebuild}. Reindexes all host filters. Force keyword deletes all previous index and regenerates the index. Norebuld keyword will not regenerate index after delete.",
                 "function"      => "filters"
             ],
             [
@@ -1092,9 +1098,9 @@ class Firewall extends Modules
 
     protected function resetDefaultFilterHitCount()
     {
-        $resetConfirmationArr = $this->terminal->inputToArray(['confirm reset'], ['confirm reset' => 'yes/no']);
+        $resetConfirmationArr = $this->terminal->inputToArray(['confirm reset'], ['confirm reset' => ['Y', 'N']]);
 
-        if (strtolower($resetConfirmationArr['confirm reset']) === 'yes') {
+        if ($resetConfirmationArr['confirm reset'] === 'Y') {
             $firewallConfig = $this->firewallPackage->resetConfigDefaultFilterHitCount();
 
             if ($firewallConfig) {
@@ -1102,7 +1108,7 @@ class Firewall extends Modules
 
                 return true;
             }
-        } else if (strtolower($resetConfirmationArr['confirm reset']) === 'no') {
+        } else if ($resetConfirmationArr['confirm reset'] === 'N') {
             return true;
         } else {
             $this->terminal->addResponse('Unknown option entered : ' . $resetConfirmationArr['confirm reset'], 1);
@@ -1141,6 +1147,10 @@ class Firewall extends Modules
         }
 
         if (isset($totalTime) && isset($totalMemoryUsage) && isset($method)) {
+            if (strtolower($method) === 'default') {
+                $totalTime = $this->firewallPackage->getTotalMicrotimer();
+            }
+
             \cli\line('');
             \cli\line('%bEntry found in %c' . $method . '%b database. It took ' . $totalTime . '(s) and ' . $totalMemoryUsage . ' of memory.%w');
         }
@@ -1288,6 +1298,21 @@ class Firewall extends Modules
         return true;
     }
 
+    protected function filterMove($args)
+    {
+        if (!isset($args[0])) {
+            $this->terminal->addResponse('Please provide filter ID', 1);
+
+            return false;
+        }
+
+        $this->firewallPackage->moveFilter($args[0]);
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
     protected function filtersReindex($args = [])
     {
         $force = false;
@@ -1296,7 +1321,12 @@ class Firewall extends Modules
             $force = true;
         }
 
-        $this->firewallPackage->index->reindexFilters($force);
+        $norebuild = false;
+        if (isset($args[1]) && strtolower($args[1]) === 'norebuild') {
+            $norebuild = true;
+        }
+
+        $this->firewallPackage->indexes->reindexFilters($force, $norebuild);
 
         $this->addFirewallResponseToTerminalResponse();
 
