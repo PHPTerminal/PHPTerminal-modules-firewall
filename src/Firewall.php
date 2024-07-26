@@ -248,34 +248,6 @@ class Firewall extends Modules
             ]
         );
 
-        //Get Commands
-        array_push($commands,
-            [
-                "availableAt"   => "config",
-                "command"       => "",
-                "description"   => "",
-                "function"      => ""
-            ],
-            [
-                "availableAt"   => "config",
-                "command"       => "",
-                "description"   => "get commands",
-                "function"      => ""
-            ],
-            [
-                "availableAt"   => "config",
-                "command"       => "get latest bin",
-                "description"   => "get latest bin from ip2location site using API key.",
-                "function"      => "get"
-            ],
-            [
-                "availableAt"   => "config",
-                "command"       => "get latest geodata",
-                "description"   => "get latest geodata from github.com/dr5hn/ repository.",
-                "function"      => "get"
-            ]
-        );
-
         //Filter Commands
         array_push($commands,
             [
@@ -307,6 +279,52 @@ class Firewall extends Modules
                 "command"       => "filter remove",
                 "description"   => "filter remove {filter_id}. Remove a filter",
                 "function"      => "filter"
+            ]
+        );
+
+        //Maintenance Commands
+        array_push($commands,
+            [
+                "availableAt"   => "config",
+                "command"       => "",
+                "description"   => "",
+                "function"      => ""
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "",
+                "description"   => "maintenance commands",
+                "function"      => ""
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "get latest bin",
+                "description"   => "get latest bin from ip2location site using API key.",
+                "function"      => "get"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "get latest geodata",
+                "description"   => "get latest geodata from github.com/dr5hn/ repository.",
+                "function"      => "get"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "",
+                "description"   => "",
+                "function"      => ""
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "filters reindex",
+                "description"   => "filters reindex {force}. Reindexes all host filters. Force keyword deletes all previous index and regenerates the index.",
+                "function"      => "filters"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "filters reset cache",
+                "description"   => "filters reset cache. Reset filters database cache.",
+                "function"      => "filters"
             ]
         );
 
@@ -956,7 +974,7 @@ class Firewall extends Modules
 
     protected function showGeoCountries()
     {
-        $countries = $this->firewallPackage->geoGetCountries();
+        $countries = $this->firewallPackage->geo->geoGetCountries();
 
         if ($countries) {
             $this->terminal->addResponse(
@@ -982,7 +1000,7 @@ class Firewall extends Modules
             return false;
         }
 
-        $states = $this->firewallPackage->geoGetStates(strtoupper($args[0]));
+        $states = $this->firewallPackage->geo->geoGetStates(strtoupper($args[0]));
 
         if ($states) {
             $this->terminal->addResponse(
@@ -1014,7 +1032,7 @@ class Firewall extends Modules
             return false;
         }
 
-        $cities = $this->firewallPackage->geoGetCities(strtoupper($args[0]), strtoupper($args[1]));
+        $cities = $this->firewallPackage->geo->geoGetCities(strtoupper($args[0]), strtoupper($args[1]));
 
         if ($cities) {
             $this->terminal->addResponse(
@@ -1064,7 +1082,7 @@ class Firewall extends Modules
                 \cli\line('');
             }
 
-            $this->firewallPackage->processDownloadedGeodataFile($download, $this->terminal->trackCounter);
+            $this->firewallPackage->geo->processDownloadedGeodataFile($download, $this->terminal->trackCounter);
         }
 
         $this->addFirewallResponseToTerminalResponse();
@@ -1253,7 +1271,7 @@ class Firewall extends Modules
 
         $fromDefault = false;
 
-        if (isset($args[1]) && $args[1] === 'default') {
+        if (isset($args[1]) && strtolower($args[1]) === 'default') {
             $fromDefault = true;
         }
 
@@ -1264,6 +1282,30 @@ class Firewall extends Modules
 
             return true;
         }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function filtersReindex($args = [])
+    {
+        $force = false;
+
+        if (isset($args[0]) && strtolower($args[0]) === 'force') {
+            $force = true;
+        }
+
+        $this->firewallPackage->index->reindexFilters($force);
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function filtersResetCache()
+    {
+        $this->firewallPackage->resetFiltersCache();
 
         $this->addFirewallResponseToTerminalResponse();
 
