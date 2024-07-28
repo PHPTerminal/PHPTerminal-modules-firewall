@@ -97,20 +97,23 @@ class Firewall extends Modules
                 [
                     "availableAt"   => "enable",
                     "command"       => "check ip",
-                    "description"   => "check ip {address}. Check state of an ip address, if it is being blocked/allowed/monitored by the firewall.",
+                    "description"   => "check ip {address}. Check state of an ip address, if it is being blocked/allowed/monitored by the firewall. Additionally if you are checking ip using ip2location, you can add an extra argument to override the default primary method. If method is API, you can enter keyword bin to override primary method.",
                     "function"      => "check"
                 ],
             ];
 
-        if ($this->firewallConfig && isset($this->firewallConfig['ip2location_io_api_key']) && $this->firewallConfig['ip2location_io_api_key'] !== '') {
+        if ($this->firewallConfig &&
+            (isset($this->firewallConfig['ip2location_io_api_key']) && $this->firewallConfig['ip2location_io_api_key'] !== '') ||
+            (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] !== '' && $this->firewallConfig['ip2location_bin_download_date'])
+        ) {
             //grab ip details from ip2location.io api
             array_push($commands,
                 [
                     "availableAt"   => "enable",
                     "command"       => "show ip details",
-                    "description"   => "show ip details {address}. Get ip details from ip2location io API.",
+                    "description"   => "show ip details {address}. Get ip details from ip2location io API and BIN file if downloaded. Default lookup method is API, if you enter keyword bin it will lookup in bin file first.",
                     "function"      => "show"
-                ],
+                ]
             );
         }
 
@@ -801,6 +804,8 @@ class Firewall extends Modules
         $firewallConfig = $this->firewallPackage->setConfigIp2locationKey($key['enter key']);
 
         if ($firewallConfig) {
+            $this->terminal->getAllCommands();
+
             $this->showRun();
 
             return true;
@@ -973,6 +978,8 @@ class Firewall extends Modules
             }
 
             $this->firewallPackage->ip2location->processDownloadedBinFile($download, $this->terminal->trackCounter);
+
+            $this->terminal->getAllCommands();
         }
 
         $this->addFirewallResponseToTerminalResponse();
@@ -1129,7 +1136,27 @@ class Firewall extends Modules
             return false;
         }
 
-        $this->firewallPackage->checkIp($args[0]);
+        $lookupMethods = null;
+
+        if (isset($args[1])) {
+            $args[1] = strtolower($args[1]);
+
+            $lookupMethods[0] = $this->firewallConfig['ip2location_primary_lookup_method'];
+
+            if ($args[1] === 'bin') {
+                $lookupMethods[0] = strtoupper($args[1]);
+                $lookupMethods[1] = 'API';
+            } else {
+                $lookupMethods[0] = 'API';
+                $lookupMethods[1] = 'BIN';
+            }
+        }
+
+        try {
+            $this->firewallPackage->checkIp($args[0], $lookupMethods);
+        } catch (\throwable $e) {
+            var_dump($e);
+        }
 
         $microtimers = $this->firewallPackage->getMicroTimer();
 
@@ -1170,7 +1197,24 @@ class Firewall extends Modules
             return false;
         }
 
-        $this->firewallPackage->ip2location->getIpDetailsFromIp2locationAPI($args[0]);
+        $using = ['API', 'BIN'];
+        if (isset($args[1])) {
+            $args[1] = strtolower($args[1]);
+
+            if ($args[1] === 'bin') {
+                $using = ['BIN', 'API'];
+            }
+        }
+
+        foreach ($using as $use) {
+            $lookupMethod = 'getIpDetailsFromIp2location' . $use;
+
+            $response = $this->firewallPackage->ip2location->$lookupMethod($args[0]);
+
+            if ($response) {
+                break;
+            }
+        }
 
         $this->addFirewallResponseToTerminalResponse();
 
