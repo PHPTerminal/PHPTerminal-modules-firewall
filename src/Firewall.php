@@ -1162,16 +1162,12 @@ class Firewall extends Modules
 
         if ($microtimers && count($microtimers) > 0) {
             foreach ($microtimers as $time) {
-                if (str_contains(strtolower($time['reference']), 'end')) {
-                    $totalTime = $time['difference'];
-                    if (str_contains(strtolower($time['memoryusage']), 'nan')) {
-                        $time['memoryusage'] = str_replace('NAN', '0', $time['memoryusage']);
-                    }
-                    $totalMemoryUsage = $time['memoryusage'];
-                    $method = str_replace('CheckIpFilterEnd', '', $time['reference']);
-
-                    break;
+                $totalTime = $time['difference'];
+                if (str_contains(strtolower($time['memoryusage']), 'nan')) {
+                    $time['memoryusage'] = str_replace('NAN', '0', $time['memoryusage']);
                 }
+                $totalMemoryUsage = $time['memoryusage'];
+                $method = str_replace('CheckIpFilter', '', $time['reference']);
             }
         }
 
