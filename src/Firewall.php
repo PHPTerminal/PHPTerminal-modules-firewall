@@ -886,6 +886,8 @@ class Firewall extends Modules
         if ($firewallConfig) {
             $this->showRun();
 
+            $this->terminal->getAllCommands();//Reset commands list to show/hide show ip details command.
+
             return true;
         }
 
@@ -960,7 +962,7 @@ class Firewall extends Modules
 
         $download = $this->terminal->downloadData(
                 'https://www.ip2location.com/download/?token=' . $this->firewallConfig['ip2location_api_key'] . '&file=' . $this->firewallConfig['ip2location_bin_file_code'],
-                fwbase_path('firewalldata/ip2locationdata/' . $this->firewallConfig['ip2location_bin_file_code'] . '.ZIP')
+                $this->firewallPackage->ip2location->dataPath . '/' . $this->firewallConfig['ip2location_bin_file_code'] . '.ZIP'
             );
 
         if ($download) {
@@ -970,7 +972,7 @@ class Firewall extends Modules
                 \cli\line('');
             }
 
-            $this->firewallPackage->processDownloadedBinFile($download, $this->terminal->trackCounter);
+            $this->firewallPackage->ip2location->processDownloadedBinFile($download, $this->terminal->trackCounter);
         }
 
         $this->addFirewallResponseToTerminalResponse();
@@ -1078,7 +1080,7 @@ class Firewall extends Modules
 
         $download = $this->terminal->downloadData(
                 'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/countries%2Bstates%2Bcities.json',
-                fwbase_path('firewalldata/geodata/countries+states+cities.json')
+                $this->firewallPackage->geo->dataPath . '/countries+states+cities.json'
             );
 
         if (true) {
@@ -1168,7 +1170,7 @@ class Firewall extends Modules
             return false;
         }
 
-        $this->firewallPackage->getIpDetailsFromIp2locationAPI($args[0]);
+        $this->firewallPackage->ip2location->getIpDetailsFromIp2locationAPI($args[0]);
 
         $this->addFirewallResponseToTerminalResponse();
 
