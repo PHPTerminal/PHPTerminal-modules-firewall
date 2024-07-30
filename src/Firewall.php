@@ -405,6 +405,10 @@ class Firewall extends Modules
             if (isset($filters['response']['responseCode']) && $filters['response']['responseCode'] == 0) {
                 if (isset($filters['response']['responseData']['filters']) && count($filters['response']['responseData']['filters']) > 0) {
                     $filters = $filters['response']['responseData']['filters'];
+                } else {
+                    $this->terminal->addResponse('Firewall has no filters!', 2);
+
+                    return true;
                 }
             }
         } else {
