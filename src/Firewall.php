@@ -487,16 +487,17 @@ class Firewall extends Modules
             $rows = $filters[$pageCounter];
 
             array_walk($rows, function(&$row) use ($headers, $getDefault) {
-                if (!$getDefault) {
-                    if (key_exists('parent_id', $row)) {
-                        unset($row['parent_id']);
-                    }
+                if (key_exists('parent_id', $row)) {
+                    unset($row['parent_id']);
                 }
                 $row = array_replace(array_flip($headers), $row);
                 $row = array_values($row);
             });
 
             $table = new \cli\Table();
+            array_walk($headers, function(&$header) {
+                $header = strtoupper($header);
+            });
             $table->setHeaders($headers);
             $table->setRows($rows);
             $table->setRenderer(new \cli\table\Ascii($columns));
@@ -626,12 +627,17 @@ class Firewall extends Modules
                 $filter['updated_by'] = "DEFAULT RULE";
             }
 
+            $time = Carbon::parse($filter['updated_at']);
+            $filter['updated_at'] = $time->toDateTimeString();
+
             if (isset($filter['ips']) && $filter['ips'] > 0) {
                 $ips = $filter['ips'];
                 unset($filter['ips']);
 
                 array_walk($ips, function(&$ip) use($filter) {
                     $ip['address (parent)'] = $ip['address'] . ' (' . $filter['address'] . ')';
+                    $time = Carbon::parse($ip['updated_at']);
+                    $ip['updated_at'] = $time->toDateTimeString();
                 });
                 $filter['address (parent)'] = $filter['address'];
                 $filter = [$filter];
