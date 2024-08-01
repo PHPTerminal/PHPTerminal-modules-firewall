@@ -1166,7 +1166,9 @@ class Firewall extends Modules
         try {
             $this->firewallPackage->checkIp($args[0], $lookupMethods);
         } catch (\throwable $e) {
-            var_dump($e);
+            \cli\line('%r' . $e->getMessage() . '%w');
+
+            return true;
         }
 
         $microtimers = $this->firewallPackage->getMicroTimer();
