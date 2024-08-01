@@ -1189,8 +1189,12 @@ class Firewall extends Modules
                 $totalTime = $this->firewallPackage->getTotalMicrotimer();
             }
 
+            if (strtolower($method) !== 'indexes') {
+                $method = strtolower($method) . ' database';
+            }
+
             \cli\line('');
-            \cli\line('%bEntry found in %c' . $method . '%b database. It took ' . $totalTime . '(s) and ' . $totalMemoryUsage . ' of memory.%w');
+            \cli\line('%bEntry found in %c' . $method . '%b. It took ' . $totalTime . '(s) and ' . $totalMemoryUsage . ' of memory.%w');
         }
 
         $this->addFirewallResponseToTerminalResponse();
