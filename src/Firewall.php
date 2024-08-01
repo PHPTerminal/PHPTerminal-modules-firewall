@@ -495,10 +495,11 @@ class Firewall extends Modules
             });
 
             $table = new \cli\Table();
-            array_walk($headers, function(&$header) {
-                $header = strtoupper($header);
+            $headersUpperCase = [];
+            array_walk($headers, function($header) use(&$headersUpperCase) {
+                array_push($headersUpperCase, strtoupper($header));
             });
-            $table->setHeaders($headers);
+            $table->setHeaders($headersUpperCase);
             $table->setRows($rows);
             $table->setRenderer(new \cli\table\Ascii($columns));
             $table->display();
