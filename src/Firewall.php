@@ -1171,31 +1171,8 @@ class Firewall extends Modules
             return true;
         }
 
-        $microtimers = $this->firewallPackage->getMicroTimer();
-
-        if ($microtimers && count($microtimers) > 0) {
-            foreach ($microtimers as $time) {
-                $totalTime = $time['difference'];
-                if (str_contains(strtolower($time['memoryusage']), 'nan')) {
-                    $time['memoryusage'] = str_replace('NAN', '0', $time['memoryusage']);
-                }
-                $totalMemoryUsage = $time['memoryusage'];
-                $method = str_replace('CheckIpFilter', '', $time['reference']);
-            }
-        }
-
-        if (isset($totalTime) && isset($totalMemoryUsage) && isset($method)) {
-            if (strtolower($method) === 'default') {
-                $totalTime = $this->firewallPackage->getTotalMicrotimer();
-            }
-
-            if (strtolower($method) !== 'indexes') {
-                $method = strtolower($method) . ' database';
-            }
-
-            \cli\line('');
-            \cli\line('%bEntry found in %c' . $method . '%b. It took ' . $totalTime . '(s) and ' . $totalMemoryUsage . ' of memory.%w');
-        }
+        \cli\line('');
+        \cli\line('%b' . $this->firewallPackage->getProcessedMicroTimers() . '%w');
 
         $this->addFirewallResponseToTerminalResponse();
 
