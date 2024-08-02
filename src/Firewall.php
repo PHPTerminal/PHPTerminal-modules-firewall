@@ -280,7 +280,7 @@ class Firewall extends Modules
             [
                 "availableAt"   => "config",
                 "command"       => "filter add",
-                "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|country_iso2_code:region:city}. filter_type options: allow, block, monitor. address_type options: host, network, ip2location.",
+                "description"   => "filter add {filter_type} {address_type} {ip_address|network/subnet|country_iso2_code:region:city} {block-proxy}. filter_type options: allow, block, monitor. address_type options: host, network, ip2location. Block-proxy keyword is only valid if the address_type is ip2location and the filter should block proxy connections.",
                 "function"      => "filter"
             ],
             [
@@ -1391,6 +1391,13 @@ class Firewall extends Modules
         $filterData['filter_type'] = $args[0];
         $filterData['address_type'] = $args[1];
         $filterData['address'] = $args[2];
+        $filterData['ip2location_proxy'] = 'allow';
+        if ($filterData['address_type'] === 'ip2location' &&
+            isset($args[3]) &&
+            $args[3] === 'block-proxy'
+        ) {
+            $filterData['ip2location_proxy'] = 'block';
+        }
         $filterData['updated_by'] = $this->terminal->getAccount()['id'] ?? 0;
         $filterData['updated_at'] = time();
         $filterData['hit_count'] = 0;
