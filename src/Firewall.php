@@ -239,6 +239,18 @@ class Firewall extends Modules
             ],
             [
                 "availableAt"   => "config",
+                "command"       => "set ip2location proxy bin file code",
+                "description"   => "set ip2location proxy bin file code.",
+                "function"      => "set"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "set ip2location proxy bin access mode",
+                "description"   => "set ip2location proxy bin access mode.",
+                "function"      => "set"
+            ],
+            [
+                "availableAt"   => "config",
                 "command"       => "set ip2location io key",
                 "description"   => "set ip2location io key. Set key as null to remove the key",
                 "function"      => "set"
@@ -307,8 +319,14 @@ class Firewall extends Modules
             ],
             [
                 "availableAt"   => "config",
-                "command"       => "get latest bin",
-                "description"   => "get latest bin from ip2location site using API key.",
+                "command"       => "get latest ip2location bin",
+                "description"   => "get latest ip2location bin from ip2location site using API key.",
+                "function"      => "get"
+            ],
+            [
+                "availableAt"   => "config",
+                "command"       => "get latest ip2location proxy bin",
+                "description"   => "get latest ip2location proxy bin from ip2location site using API key.",
                 "function"      => "get"
             ],
             [
@@ -893,6 +911,72 @@ class Firewall extends Modules
         return true;
     }
 
+    protected function setIp2locationProxyBinFileCode($args)
+    {
+        $proxyBinFileCode = $this->terminal->inputToArray(
+            ['proxy bin file code'],
+            [
+                'proxy bin file code' =>
+                    [
+                        'PX3BIN','PX3LITEBIN'
+                    ]
+            ],
+            [],
+            [
+                'proxy bin file code' => $this->firewallConfig['ip2location_proxy_bin_file_code']
+            ]
+        );
+
+        if (!$proxyBinFileCode) {
+            return true;
+        }
+
+        $firewallConfig = $this->firewallPackage->setIp2locationProxyBinFileCode($proxyBinFileCode['proxy bin file code']);
+
+        if ($firewallConfig) {
+            $this->showRun();
+
+            return true;
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function setIp2locationProxyBinAccessMode($args)
+    {
+        $proxyBinAccessMode = $this->terminal->inputToArray(
+            ['proxy bin access mode'],
+            [
+                'proxy bin access mode' =>
+                    [
+                        'SHARED_MEMORY', 'MEMORY_CACHE', 'FILE_IO'
+                    ]
+            ],
+            [],
+            [
+                'proxy bin access mode' => $this->firewallConfig['ip2location_proxy_bin_access_mode']
+            ]
+        );
+
+        if (!$proxyBinAccessMode) {
+            return true;
+        }
+
+        $firewallConfig = $this->firewallPackage->setIp2locationProxyBinAccessMode($proxyBinAccessMode['proxy bin access mode']);
+
+        if ($firewallConfig) {
+            $this->showRun();
+
+            return true;
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
     protected function setIp2locationIoKey($args)
     {
         $key = $this->terminal->inputToArray(['enter key']);
@@ -948,7 +1032,7 @@ class Firewall extends Modules
         return true;
     }
 
-    protected function getLatestBin()
+    protected function getLatestIp2locationBin()
     {
         if (!isset($this->firewallConfig['ip2location_api_key']) ||
             (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] == 'null')
@@ -989,6 +1073,56 @@ class Firewall extends Modules
             }
 
             $this->firewallPackage->ip2location->processDownloadedBinFile($download, $this->terminal->trackCounter);
+
+            $this->terminal->getAllCommands();
+        }
+
+        $this->addFirewallResponseToTerminalResponse();
+
+        return true;
+    }
+
+    protected function getLatestIp2locationProxyBin()
+    {
+        if (!isset($this->firewallConfig['ip2location_api_key']) ||
+            (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] == 'null')
+        ) {
+            $this->terminal->addResponse('Please set IP2Location API key!', 1);
+
+            return false;
+        }
+
+        $confimation = $this->terminal->inputToArray(
+            ['get latest version of proxy bin file: ' . $this->firewallConfig['ip2location_proxy_bin_file_code']],
+            [
+                'get latest version of proxy bin file: ' . $this->firewallConfig['ip2location_proxy_bin_file_code'] =>
+                    [
+                        'Y', 'N'
+                    ]
+            ]
+        );
+
+        if (!$confimation ||
+            ($confimation && $confimation['get latest version of proxy bin file: ' . $this->firewallConfig['ip2location_proxy_bin_file_code']] === 'N')
+        ) {
+            return true;
+        }
+
+        \cli\line('');
+
+        $download = $this->terminal->downloadData(
+                'https://www.ip2location.com/download/?token=' . $this->firewallConfig['ip2location_api_key'] . '&file=' . $this->firewallConfig['ip2location_proxy_bin_file_code'],
+                $this->firewallPackage->ip2location->dataPath . '/' . $this->firewallConfig['ip2location_proxy_bin_file_code'] . '.ZIP'
+            );
+
+        if ($download) {
+            if ($this->terminal->trackCounter !== 0) {
+                \cli\line('');
+                \cli\line('%bProcessing download...%w');
+                \cli\line('');
+            }
+
+            $this->firewallPackage->ip2location->processDownloadedBinFile($download, $this->terminal->trackCounter, true);
 
             $this->terminal->getAllCommands();
         }
