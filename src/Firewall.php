@@ -484,20 +484,20 @@ class Firewall extends Modules
 
         $headers =
             [
-                'id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at'
+                'id', 'filter_type', 'address_type', 'address', 'ip_hits', 'hit_count', 'updated_by', 'updated_at', 'ip2location_proxy'
             ];
         $columns =
             [
-                5,15,15,50,10,10,25,25
+                5,15,15,50,10,10,25,25,20
             ];
         if ($getDefault) {
             $headers =
                 [
-                    'id', 'filter_type', 'address_type', 'address', 'hit_count', 'updated_by', 'updated_at'
+                    'id', 'filter_type', 'address_type', 'address', 'hit_count', 'updated_by', 'updated_at', 'ip2location_proxy'
                 ];
             $columns =
                 [
-                    5,15,15,50,10,25,25
+                    5,15,15,50,10,25,25,20
                 ];
         }
 
@@ -1391,12 +1391,15 @@ class Firewall extends Modules
         $filterData['filter_type'] = $args[0];
         $filterData['address_type'] = $args[1];
         $filterData['address'] = $args[2];
-        $filterData['ip2location_proxy'] = 'allow';
-        if ($filterData['address_type'] === 'ip2location' &&
-            isset($args[3]) &&
-            $args[3] === 'block-proxy'
-        ) {
-            $filterData['ip2location_proxy'] = 'block';
+        $filterData['ip2location_proxy'] = '-';
+        if ($filterData['address_type'] === 'ip2location') {
+            $filterData['ip2location_proxy'] = 'allow';
+
+            if (isset($args[3]) &&
+                $args[3] === 'block-proxy'
+            ) {
+                $filterData['ip2location_proxy'] = 'block';
+            }
         }
         $filterData['updated_by'] = $this->terminal->getAccount()['id'] ?? 0;
         $filterData['updated_at'] = time();
