@@ -104,14 +104,14 @@ class Firewall extends Modules
 
         if ($this->firewallConfig &&
             (isset($this->firewallConfig['ip2location_io_api_key']) && $this->firewallConfig['ip2location_io_api_key'] !== '') ||
-            (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] !== '' && $this->firewallConfig['ip2location_bin_download_date'])
+            (isset($this->firewallConfig['ip2location_api_key']) && $this->firewallConfig['ip2location_api_key'] !== '' && isset($this->firewallConfig['ip2location_bin_version']))
         ) {
             //grab ip details from ip2location.io api
             array_push($commands,
                 [
                     "availableAt"   => "enable",
                     "command"       => "show ip details",
-                    "description"   => "show ip details {address}. Get ip details from ip2location io API and BIN file if downloaded. Default lookup method is API, if you enter keyword bin it will lookup in bin file first.",
+                    "description"   => "show ip details {address}. Get ip details from ip2location io API and BIN file if downloaded. Default lookup method is API, if you enter keyword bin it will lookup in bin file first. Add keyword proxy in the end if you want to check the proxy bin file.",
                     "function"      => "show"
                 ]
             );
@@ -1322,21 +1322,28 @@ class Firewall extends Modules
         }
 
         $using = ['API', 'BIN'];
+        $isProxy = false;
         if (isset($args[1])) {
             $args[1] = strtolower($args[1]);
 
-            if ($args[1] === 'bin') {
+            if ($args[1] === 'proxy') {
+                $isProxy = true;
+
+                $this->firewallPackage->ip2location->getIpDetailsFromIp2locationProxyBin($args[0]);
+            } else if ($args[1] === 'bin') {
                 $using = ['BIN', 'API'];
             }
         }
 
-        foreach ($using as $use) {
-            $lookupMethod = 'getIpDetailsFromIp2location' . $use;
+        if (!$isProxy) {
+            foreach ($using as $use) {
+                $lookupMethod = 'getIpDetailsFromIp2location' . $use;
 
-            $response = $this->firewallPackage->ip2location->$lookupMethod($args[0]);
+                $response = $this->firewallPackage->ip2location->$lookupMethod($args[0]);
 
-            if ($response) {
-                break;
+                if ($response) {
+                    break;
+                }
             }
         }
 
