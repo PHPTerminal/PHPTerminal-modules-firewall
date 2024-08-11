@@ -1417,6 +1417,12 @@ class Firewall extends Modules
 
             $argsArr = array_splice($argsArr, 2);
 
+            if ($argsArr[array_key_last($argsArr)] === 'block-proxy') {
+                $args[3] = 'block-proxy';
+
+                array_pop($argsArr);
+            }
+
             $args[2] = join(' ', $argsArr);
         }
 
