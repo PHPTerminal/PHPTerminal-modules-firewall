@@ -649,6 +649,20 @@ class Firewall extends Modules
             $time = Carbon::parse($filter['updated_at']);
             $filter['updated_at'] = $time->toDateTimeString();
 
+            if (isset($this->terminal->config['plugins']['auth']['class'])) {
+                $this->auth = (new $this->terminal->config['plugins']['auth']['class']())->init($this->terminal);
+            }
+
+            if (isset($filter['updated_by']) && $filter['updated_by'] === "000") {
+                $filter['updated_by'] = 'DEFAULT RULE';
+            } else if (isset($filter['updated_by']) && $filter['updated_by'] != 0) {
+                $account = $this->auth->getAccountById($filter['updated_by']);
+
+                if (isset($account['profile']['full_name']) || isset($account['profile']['email'])) {
+                    $filter['updated_by'] = $account['profile']['full_name'] ?? $account['profile']['email'];
+                }
+            }
+
             if (isset($filter['ips']) && $filter['ips'] > 0) {
                 $ips = $filter['ips'];
                 unset($filter['ips']);
@@ -657,7 +671,18 @@ class Firewall extends Modules
                     $ip['address (parent)'] = $ip['address'] . ' (' . $filter['address'] . ')';
                     $time = Carbon::parse($ip['updated_at']);
                     $ip['updated_at'] = $time->toDateTimeString();
+
+                    if (isset($ip['updated_by']) && $ip['updated_by'] === "000") {
+                        $ip['updated_by'] = 'DEFAULT RULE';
+                    } else if (isset($ip['updated_by']) && $ip['updated_by'] != 0) {
+                        $account = $this->auth->getAccountById($ip['updated_by']);
+
+                        if (isset($account['profile']['full_name']) || isset($account['profile']['email'])) {
+                            $ip['updated_by'] = $account['profile']['full_name'] ?? $account['profile']['email'];
+                        }
+                    }
                 });
+
                 $filter['address (parent)'] = $filter['address'];
                 $filter = [$filter];
                 $filter = array_merge($filter, $ips);
