@@ -25,7 +25,8 @@
     "require": {
         "php": "^7.2.5 || ^8.0",
         "ext-json": "*",
-        "phpterminal/phpterminal": "*"
+        "phpterminal/phpterminal": "*",
+        "oyeaussie/phpfirewall": "*"
     },
     "autoload": {
         "psr-4": {
